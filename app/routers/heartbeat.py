@@ -6,6 +6,8 @@ from app.database.session import get_db
 from app.models.device import Device
 from app.core.device_auth import verify_device_key
 
+from app.services.websocket_manager import manager
+
 
 router = APIRouter(
     prefix="/heartbeat",
@@ -34,6 +36,17 @@ async def receive_heartbeat(
 
     db.commit()
     db.refresh(device)
+
+
+    # ارسال وضعیت لحظه‌ای به کلاینت‌های متصل
+    await manager.broadcast(
+        {
+            "event": "device_status",
+            "device_id": device.device_id,
+            "is_online": device.is_online,
+            "last_heartbeat": str(device.last_heartbeat)
+        }
+    )
 
 
     return {

@@ -3,7 +3,10 @@ from sqlalchemy.orm import Session
 
 from app.schemas.command import CommandSchema
 from app.database.session import get_db
+
 from app.models.device import Device
+from app.models.command import Command
+
 from app.mqtt.publisher import publish_command
 
 from app.core.auth import get_current_user
@@ -22,9 +25,13 @@ async def send_command(
     current_user: str = Depends(get_current_user)
 ):
 
-    device = db.query(Device).filter(
-        Device.device_id == command.device_id
-    ).first()
+    device = (
+        db.query(Device)
+        .filter(
+            Device.device_id == command.device_id
+        )
+        .first()
+    )
 
 
     if not device:
@@ -34,18 +41,36 @@ async def send_command(
         )
 
 
-    mqtt_result = publish_command(
+    if not device.is_online:
+        raise HTTPException(
+            status_code=400,
+            detail="Device is offline"
+        )
+
+
+    new_command = Command(
+        device_id=device.device_id,
+        command=command.command,
+        status="sent"
+    )
+
+
+    db.add(new_command)
+    db.commit()
+    db.refresh(new_command)
+
+
+    publish_command(
         device.device_id,
-        {
-            "command": command.command
-        }
+        command.command
     )
 
 
     return {
         "message": "Command sent successfully",
-        "user": current_user,
+        "command_id": new_command.id,
         "device_id": device.device_id,
         "command": command.command,
-        "mqtt": mqtt_result
+        "status": new_command.status,
+        "user": current_user
     }

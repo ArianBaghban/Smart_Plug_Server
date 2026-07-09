@@ -10,6 +10,8 @@ from app.models.device import Device
 
 from app.core.device_auth import verify_device_key
 
+from app.services.websocket_manager import manager
+
 
 router = APIRouter(
     prefix="/telemetry",
@@ -52,6 +54,23 @@ async def receive_telemetry(
 
     db.commit()
     db.refresh(telemetry)
+
+
+    # ارسال لحظه‌ای اطلاعات به داشبورد
+    await manager.broadcast(
+        {
+            "event": "telemetry",
+            "device_id": telemetry.device_id,
+            "voltage": telemetry.voltage,
+            "current": telemetry.current,
+            "power": telemetry.power,
+            "energy": telemetry.energy,
+            "frequency": telemetry.frequency,
+            "temperature": telemetry.temperature,
+            "wifi_rssi": telemetry.wifi_rssi,
+            "timestamp": str(telemetry.timestamp)
+        }
+    )
 
 
     return {

@@ -1,12 +1,12 @@
-from sqlalchemy import Column, Integer, String, Boolean, DateTime
+from sqlalchemy import Column, Integer, String, DateTime
 from datetime import datetime
 
 from app.database.connection import Base
 
 
-class User(Base):
+class Command(Base):
 
-    __tablename__ = "users"
+    __tablename__ = "commands"
 
 
     id = Column(
@@ -16,31 +16,29 @@ class User(Base):
     )
 
 
-    username = Column(
+    device_id = Column(
         String,
-        unique=True,
         nullable=False,
         index=True
     )
 
 
-    email = Column(
+    command = Column(
         String,
-        unique=True,
+        nullable=False
+    )
+
+
+    status = Column(
+        String,
+        default="sent",
+        nullable=False
+    )
+
+
+    response = Column(
+        String,
         nullable=True
-    )
-
-
-    password = Column(
-        String,
-        nullable=False
-    )
-
-
-    is_active = Column(
-        Boolean,
-        default=True,
-        nullable=False
     )
 
 
@@ -48,4 +46,10 @@ class User(Base):
         DateTime,
         default=datetime.utcnow,
         nullable=False
+    )
+
+
+    completed_at = Column(
+        DateTime,
+        nullable=True
     )
