@@ -21,7 +21,7 @@ class ConnectionManager:
 
 
     async def broadcast(self, message: dict):
-
+        print("Broadcast:",message)
         disconnected = []
 
         for connection in self.active_connections:

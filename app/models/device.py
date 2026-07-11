@@ -1,4 +1,4 @@
-from sqlalchemy import Column, String, Integer, DateTime, Boolean
+from sqlalchemy import Column, String, Integer, DateTime, Boolean, ForeignKey
 from datetime import datetime
 
 from app.database.connection import Base
@@ -63,5 +63,11 @@ class Device(Base):
 
     last_heartbeat = Column(
         DateTime,
+        nullable=True
+    )
+
+    owner_id = Column(
+        Integer,
+        ForeignKey("users.id"),
         nullable=True
     )

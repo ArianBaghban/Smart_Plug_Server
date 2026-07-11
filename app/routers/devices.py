@@ -23,7 +23,9 @@ router = APIRouter(
 @router.post("/")
 async def register_device(
     device: DeviceSchema,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user: str=
+Depends(get_current_user)
 ):
 
     existing_device = db.query(Device).filter(
@@ -70,7 +72,9 @@ async def register_device(
 
         last_seen=datetime.utcnow(),
 
-        is_online=False
+        is_online=False,
+
+        owner_id=current_user.id 
     )
 
 
@@ -101,6 +105,11 @@ async def get_devices(
     current_user: str = Depends(get_current_user)
 ):
 
-    devices = db.query(Device).all()
-
+    devices = (
+    db.query(Device)
+    .filter(
+        Device.owner_id == current_user.id
+    )
+    .all()
+)
     return devices

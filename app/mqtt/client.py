@@ -1,8 +1,11 @@
 import json
+import asyncio
 import paho.mqtt.client as mqtt
 
 from app.core.config import settings
 from app.mqtt.ack_handler import handle_command_ack
+
+from app.services.websocket_manager import manager
 
 
 client = mqtt.Client(
@@ -14,11 +17,9 @@ def on_connect(client, userdata, flags, reason_code, properties):
 
     print("MQTT Connected:", reason_code)
 
-    # دریافت پاسخ دستگاه‌ها
     client.subscribe(
         "smartplug/+/response"
     )
-
 
 
 def on_message(client, userdata, msg):
@@ -42,7 +43,21 @@ def on_message(client, userdata, msg):
             and "status" in data
         ):
 
+            # ذخیره ACK در دیتابیس
             handle_command_ack(data)
+
+
+            # ارسال لحظه‌ای به داشبورد
+            asyncio.run(
+                manager.broadcast(
+                    {
+                        "event": "command_ack",
+                        "device_id": data["device_id"],
+                        "command": data["command"],
+                        "status": data["status"]
+                    }
+                )
+            )
 
 
     except Exception as e:
